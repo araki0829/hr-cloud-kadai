@@ -93,7 +93,7 @@ return array(
 	 * default_timezone		optional, if you want to change the server's default timezone
 	 */
 	// 'server_gmt_offset'  => 0,
-	// 'default_timezone'   => null,
+	'default_timezone'   => 'Asia/Tokyo',
 
 	/**
 	 * Logging Threshold.  Can be set to any of the following:
@@ -113,12 +113,13 @@ return array(
 	 * Security settings
 	 */
 	'security' => array(
-		// 'csrf_autoload'            => false,
+		// 各フォーム実装時に CSRF トークンを埋め込んで利用する
+		'csrf_autoload'            => false,
 		// 'csrf_autoload_methods'    => array('post', 'put', 'delete'),
 		// 'csrf_bad_request_on_fail' => false,
-		// 'csrf_auto_token'          => false,
-		// 'csrf_token_key'           => 'fuel_csrf_token',
-		// 'csrf_expiration'          => 0,
+		'csrf_auto_token'          => true,
+		'csrf_token_key'           => 'hr_cloud_csrf_token',
+		'csrf_expiration'          => 3600,
 
 		/**
 		 * A salt to make sure the generated security tokens are not predictable
@@ -131,7 +132,7 @@ return array(
 		 * Examples of these are HTTP_X_FORWARDED_FOR and HTTP_X_FORWARDED_PROTO, which
 		 * can be faked which could have security implications
 		 */
-		// 'allow_x_headers'       => false,
+		'allow_x_headers'       => false,
 
 		/**
 		 * This input filter can be any normal PHP function as well as 'xss_clean'
@@ -160,7 +161,7 @@ return array(
 		/**
 		 * Encoding mechanism to use on htmlentities()
 		 */
-		// 'htmlentities_flags' => ENT_QUOTES,
+		'htmlentities_flags' => ENT_QUOTES,
 
 		/**
 		 * Whether to encode HTML entities as well
@@ -170,7 +171,7 @@ return array(
 		/**
 		 * Whether to automatically filter view data
 		 */
-		// 'auto_filter_output'  => true,
+		'auto_filter_output'  => true,
 
 		/**
 		 * With output encoding switched on all objects passed will be converted to strings or
@@ -188,18 +189,18 @@ return array(
 	/**
 	 * Cookie settings
 	 */
-	// 'cookie' => array(
+	'cookie' => array(
 		// Number of seconds before the cookie expires
-		// 'expiration'  => 0,
+		'expiration'  => 60 * 60 * 24 * 30,
 		// Restrict the path that the cookie is available to
-		// 'path'        => '/',
+		'path'        => '/',
 		// Restrict the domain that the cookie is available to
-		// 'domain'      => null,
+		'domain'      => null,
 		// Only transmit cookies over secure connections
-		// 'secure'      => false,
+		'secure'      => false,
 		// Only transmit cookies over HTTP, disabling Javascript access
-		// 'http_only'   => false,
-	// ),
+		'http_only'   => true,
+	),
 
 	/**
 	 * Validation settings
