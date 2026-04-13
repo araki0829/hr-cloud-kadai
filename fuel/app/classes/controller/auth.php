@@ -50,24 +50,13 @@ class Controller_Auth extends Controller_Base
 
     if (empty($errors))
     {
-      $user = \Model_User::find_by_email($form['email']);
-
-      if (empty($user) or ! password_verify($password, $user['password']))
+      if ($this->attempt_auth_login($form['email'], $password))
       {
-        $errors['auth'] = 'メールアドレスまたはパスワードが正しくありません。';
-      }
-      else
-      {
-        \Session::instance()->rotate();
-        \Session::set('user', array(
-          'id' => $user['id'],
-          'name' => $user['name'],
-          'email' => $user['email'],
-        ));
         \Session::set_flash('success', 'ログインしました。');
-
         \Response::redirect('projects');
       }
+
+      $errors['auth'] = 'メールアドレスまたはパスワードが正しくありません。';
     }
 
     if ( ! empty($errors))
@@ -160,8 +149,13 @@ class Controller_Auth extends Controller_Base
 
       \Model_User::create(array(
         'name' => $form['name'],
+        'username' => $form['email'],
         'email' => $form['email'],
-        'password' => password_hash($password, PASSWORD_DEFAULT),
+        'password' => \Auth::instance()->hash_password($password),
+        'group' => 1,
+        'last_login' => 0,
+        'login_hash' => '',
+        'profile_fields' => serialize(array('name' => $form['name'])),
         'created_at' => $now,
         'updated_at' => $now,
       ));
@@ -175,9 +169,36 @@ class Controller_Auth extends Controller_Base
 
   public function post_logout()
   {
-    \Session::delete('user');
+    \Auth::logout();
     \Session::instance()->rotate();
     \Response::redirect('login');
+  }
+
+  protected function attempt_auth_login($email, $password)
+  {
+    if (\Auth::login($email, $password))
+    {
+      return true;
+    }
+
+    $legacy_user = \Model_User::find_by_email($email);
+
+    if (empty($legacy_user) or ! password_verify($password, $legacy_user['password']))
+    {
+      return false;
+    }
+
+    \Model_User::update_by_id($legacy_user['id'], array(
+      'username' => $legacy_user['email'],
+      'password' => \Auth::instance()->hash_password($password),
+      'group' => 1,
+      'last_login' => 0,
+      'login_hash' => '',
+      'profile_fields' => serialize(array('name' => $legacy_user['name'])),
+      'updated_at' => time(),
+    ));
+
+    return \Auth::login($email, $password);
   }
 
   protected function render_login(array $form, array $errors)

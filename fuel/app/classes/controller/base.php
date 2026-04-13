@@ -4,7 +4,7 @@ class Controller_Base extends Controller_Template
 {
   public $template = 'template';
 
-  protected $current_user = null;
+  protected $current_user = array();
   protected $auth_exempt_actions = array();
 
   public function before()
@@ -14,8 +14,7 @@ class Controller_Base extends Controller_Template
     header('X-Frame-Options: DENY');
     header("Content-Security-Policy: frame-ancestors 'none'");
 
-    // セッションからログイン中ユーザを取得する
-    $this->current_user = \Session::get('user', array());
+    $this->current_user = $this->resolve_current_user();
 
     // テンプレートを使う画面では共通データを渡す
     if (is_object($this->template))
@@ -42,5 +41,27 @@ class Controller_Base extends Controller_Template
   protected function get_current_action()
   {
     return \Request::active()->action;
+  }
+
+  protected function resolve_current_user()
+  {
+    if ( ! \Auth::check())
+    {
+      return array();
+    }
+
+    $user_id = \Auth::instance()->get_user_id();
+
+    if ( ! is_array($user_id) or ! isset($user_id[1]))
+    {
+      return array();
+    }
+
+    return array(
+      'id' => (int) $user_id[1],
+      'name' => (string) \Auth::instance()->get('name', ''),
+      'email' => (string) \Auth::instance()->get_email(),
+      'username' => (string) \Auth::instance()->get('username', ''),
+    );
   }
 }
