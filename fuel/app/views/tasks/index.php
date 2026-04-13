@@ -121,7 +121,7 @@
 
 <div class="task-project-card">
 	<h3><?php echo e($project['name']); ?></h3>
-	<p><?php echo e($project['description'] !== '' ? $project['description'] : 'プロジェクト説明は未登録です。'); ?></p>
+	<p><?php echo e($project['description_display']); ?></p>
 </div>
 
 <?php if (empty($tasks)): ?>
@@ -143,7 +143,7 @@
 			<?php foreach ($tasks as $task): ?>
 				<tr>
 					<td><?php echo e($task['title']); ?></td>
-					<td class="task-body-text"><?php echo e($task['body'] !== '' ? $task['body'] : '詳細は未登録です。'); ?></td>
+					<td class="task-body-text"><?php echo e($task['body_display']); ?></td>
 					<td
 						class="task-status-cell"
 						data-task-id="<?php echo e($task['id']); ?>"
@@ -175,7 +175,7 @@
 							"
 						></div>
 					</td>
-					<td><?php echo $task['updated_at'] ? date('Y-m-d H:i', $task['updated_at']) : '-'; ?></td>
+					<td><?php echo e($task['updated_at_display']); ?></td>
 					<td>
 						<div class="task-actions">
 							<a class="task-action-edit" href="/tasks/edit/<?php echo e($task['id']); ?>">編集</a>

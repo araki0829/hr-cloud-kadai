@@ -4,17 +4,8 @@ class Controller_Api_Tasks extends Controller_Base
 {
 	public $template = null;
 
-	public function action_change_status()
+	public function post_change_status()
 	{
-		if (\Input::method() !== 'POST')
-		{
-			return $this->json_response(array(
-				'success' => false,
-				'message' => 'Method Not Allowed',
-				'csrf_token' => \Security::fetch_token(),
-			), 405);
-		}
-
 		$task_id = (int) \Input::post('task_id', 0);
 		$status = (int) \Input::post('status', -1);
 		$status_list = $this->get_task_status_list();

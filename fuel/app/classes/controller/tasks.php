@@ -2,7 +2,7 @@
 
 class Controller_Tasks extends Controller_Base
 {
-	public function action_index($project_id)
+	public function get_index($project_id)
 	{
 		$project = $this->find_project_for_current_user((int) $project_id);
 
@@ -20,10 +20,7 @@ class Controller_Tasks extends Controller_Base
 
 		foreach ($tasks as &$task)
 		{
-			if ($task['body'] === null)
-			{
-				$task['body'] = '';
-			}
+			$task = $this->format_task_for_display($task);
 		}
 		unset($task);
 
@@ -31,13 +28,39 @@ class Controller_Tasks extends Controller_Base
 
 		$this->template->title = 'タスク一覧';
 		$this->template->content = \View::forge('tasks/index', array(
-			'project' => $project,
+			'project' => $this->format_project_for_display($project),
 			'tasks' => $tasks,
 			'status_list' => $status_list,
 		));
 	}
 
-	public function action_create($project_id)
+	public function get_create($project_id)
+	{
+		$project = $this->find_project_for_current_user((int) $project_id);
+
+		if (empty($project))
+		{
+			throw new \HttpNotFoundException();
+		}
+
+		$status_list = $this->get_task_status_list();
+		$this->render_form(array(
+			'project' => $this->format_project_for_display($project),
+			'form_title' => 'タスク作成',
+			'form_description' => '新しいタスクを登録します。',
+			'form_action' => '/projects/'.$project['id'].'/tasks/create',
+			'submit_label' => '保存',
+			'form' => array(
+				'title' => '',
+				'body' => '',
+				'status' => 0,
+			),
+			'errors' => array(),
+			'status_list' => $status_list,
+		));
+	}
+
+	public function post_create($project_id)
 	{
 		$project = $this->find_project_for_current_user((int) $project_id);
 
@@ -47,40 +70,31 @@ class Controller_Tasks extends Controller_Base
 		}
 
 		$form = array(
-			'title' => '',
-			'body' => '',
-			'status' => 0,
+			'title' => trim((string) \Input::post('title', '')),
+			'body' => trim((string) \Input::post('body', '')),
+			'status' => (int) \Input::post('status', 0),
 		);
-		$errors = array();
 		$status_list = $this->get_task_status_list();
+		$errors = $this->validate_task_form($form, $status_list);
 
-		if (\Input::method() === 'POST')
+		if (empty($errors))
 		{
-			$form['title'] = trim((string) \Input::post('title', ''));
-			$form['body'] = trim((string) \Input::post('body', ''));
-			$form['status'] = (int) \Input::post('status', 0);
-			$errors = $this->validate_task_form($form, $status_list);
+			$now = time();
 
-			if (empty($errors))
-			{
-				$now = time();
+			\DB::insert('tasks')->set(array(
+				'project_id' => $project['id'],
+				'title' => $form['title'],
+				'body' => $form['body'] !== '' ? $form['body'] : null,
+				'status' => $form['status'],
+				'created_at' => $now,
+				'updated_at' => $now,
+			))->execute();
 
-				\DB::insert('tasks')->set(array(
-					'project_id' => $project['id'],
-					'title' => $form['title'],
-					'body' => $form['body'] !== '' ? $form['body'] : null,
-					'status' => $form['status'],
-					'created_at' => $now,
-					'updated_at' => $now,
-				))->execute();
-
-				\Response::redirect('projects/'.$project['id'].'/tasks');
-			}
+			\Response::redirect('projects/'.$project['id'].'/tasks');
 		}
 
-		$this->template->title = 'タスク作成';
-		$this->template->content = \View::forge('tasks/form', array(
-			'project' => $project,
+		$this->render_form(array(
+			'project' => $this->format_project_for_display($project),
 			'form_title' => 'タスク作成',
 			'form_description' => '新しいタスクを登録します。',
 			'form_action' => '/projects/'.$project['id'].'/tasks/create',
@@ -91,7 +105,35 @@ class Controller_Tasks extends Controller_Base
 		));
 	}
 
-	public function action_edit($task_id)
+	public function get_edit($task_id)
+	{
+		$task = $this->find_task_for_current_user((int) $task_id);
+
+		if (empty($task))
+		{
+			throw new \HttpNotFoundException();
+		}
+
+		$project = $this->find_project_for_current_user((int) $task['project_id']);
+		$status_list = $this->get_task_status_list();
+
+		$this->render_form(array(
+			'project' => $this->format_project_for_display($project),
+			'form_title' => 'タスク編集',
+			'form_description' => '登録済みのタスク情報を更新します。',
+			'form_action' => '/tasks/edit/'.$task['id'],
+			'submit_label' => '更新',
+			'form' => array(
+				'title' => $task['title'],
+				'body' => $task['body'],
+				'status' => $task['status'],
+			),
+			'errors' => array(),
+			'status_list' => $status_list,
+		));
+	}
+
+	public function post_edit($task_id)
 	{
 		$task = $this->find_task_for_current_user((int) $task_id);
 
@@ -103,39 +145,30 @@ class Controller_Tasks extends Controller_Base
 		$project = $this->find_project_for_current_user((int) $task['project_id']);
 		$status_list = $this->get_task_status_list();
 		$form = array(
-			'title' => $task['title'],
-			'body' => $task['body'],
-			'status' => $task['status'],
+			'title' => trim((string) \Input::post('title', '')),
+			'body' => trim((string) \Input::post('body', '')),
+			'status' => (int) \Input::post('status', 0),
 		);
-		$errors = array();
+		$errors = $this->validate_task_form($form, $status_list);
 
-		if (\Input::method() === 'POST')
+		if (empty($errors))
 		{
-			$form['title'] = trim((string) \Input::post('title', ''));
-			$form['body'] = trim((string) \Input::post('body', ''));
-			$form['status'] = (int) \Input::post('status', 0);
-			$errors = $this->validate_task_form($form, $status_list);
+			\DB::update('tasks')
+				->set(array(
+					'title' => $form['title'],
+					'body' => $form['body'] !== '' ? $form['body'] : null,
+					'status' => $form['status'],
+					'updated_at' => time(),
+				))
+				->where('id', '=', $task['id'])
+				->where('project_id', '=', $task['project_id'])
+				->execute();
 
-			if (empty($errors))
-			{
-				\DB::update('tasks')
-					->set(array(
-						'title' => $form['title'],
-						'body' => $form['body'] !== '' ? $form['body'] : null,
-						'status' => $form['status'],
-						'updated_at' => time(),
-					))
-					->where('id', '=', $task['id'])
-					->where('project_id', '=', $task['project_id'])
-					->execute();
-
-				\Response::redirect('projects/'.$task['project_id'].'/tasks');
-			}
+			\Response::redirect('projects/'.$task['project_id'].'/tasks');
 		}
 
-		$this->template->title = 'タスク編集';
-		$this->template->content = \View::forge('tasks/form', array(
-			'project' => $project,
+		$this->render_form(array(
+			'project' => $this->format_project_for_display($project),
 			'form_title' => 'タスク編集',
 			'form_description' => '登録済みのタスク情報を更新します。',
 			'form_action' => '/tasks/edit/'.$task['id'],
@@ -146,13 +179,8 @@ class Controller_Tasks extends Controller_Base
 		));
 	}
 
-	public function action_delete($task_id)
+	public function post_delete($task_id)
 	{
-		if (\Input::method() !== 'POST')
-		{
-			\Response::redirect('projects');
-		}
-
 		$task = $this->find_task_for_current_user((int) $task_id);
 
 		if (empty($task))
@@ -168,6 +196,12 @@ class Controller_Tasks extends Controller_Base
 			->execute();
 
 		\Response::redirect('projects/'.$task['project_id'].'/tasks');
+	}
+
+	protected function render_form(array $view_data)
+	{
+		$this->template->title = $view_data['form_title'];
+		$this->template->content = \View::forge('tasks/form', $view_data);
 	}
 
 	protected function validate_task_form(array $form, array $status_list)
@@ -212,12 +246,17 @@ class Controller_Tasks extends Controller_Base
 			->execute()
 			->current();
 
-		if ($project and $project['description'] === null)
+		if ( ! $project)
+		{
+			return array();
+		}
+
+		if ($project['description'] === null)
 		{
 			$project['description'] = '';
 		}
 
-		return $project ?: array();
+		return $project;
 	}
 
 	protected function find_task_for_current_user($task_id)
@@ -231,11 +270,34 @@ class Controller_Tasks extends Controller_Base
 			->execute()
 			->current();
 
-		if ($task and $task['body'] === null)
+		if ( ! $task)
+		{
+			return array();
+		}
+
+		if ($task['body'] === null)
 		{
 			$task['body'] = '';
 		}
 
-		return $task ?: array();
+		return $task;
+	}
+
+	protected function format_project_for_display(array $project)
+	{
+		$description = $project['description'] === '' ? 'プロジェクト説明は未登録です。' : $project['description'];
+		$project['description_display'] = $description;
+
+		return $project;
+	}
+
+	protected function format_task_for_display(array $task)
+	{
+		$body = $task['body'] === null ? '' : $task['body'];
+		$task['body'] = $body;
+		$task['body_display'] = $body !== '' ? $body : '詳細は未登録です。';
+		$task['updated_at_display'] = $task['updated_at'] ? date('Y-m-d H:i', $task['updated_at']) : '-';
+
+		return $task;
 	}
 }

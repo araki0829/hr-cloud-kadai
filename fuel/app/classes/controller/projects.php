@@ -2,62 +2,56 @@
 
 class Controller_Projects extends Controller_Base
 {
-	public function action_index()
+	public function get_index()
 	{
 		$projects = $this->fetch_projects_for_current_user();
 
 		$this->template->title = 'プロジェクト一覧';
 		$this->template->content = \View::forge('projects/index', array(
-			'current_user' => $this->current_user,
+			'current_user_name' => $this->current_user['name'],
 			'projects' => $projects,
 		));
 	}
 
-	public function action_create()
+	public function get_create()
+	{
+		$this->render_form(array(
+			'form_title' => 'プロジェクト作成',
+			'form_description' => '新しいプロジェクト名と説明を登録します。',
+			'form_action' => '/projects/create',
+			'submit_label' => '保存',
+			'form' => array(
+				'name' => '',
+				'description' => '',
+			),
+			'errors' => array(),
+		));
+	}
+
+	public function post_create()
 	{
 		$form = array(
-			'name' => '',
-			'description' => '',
+			'name' => trim((string) \Input::post('name', '')),
+			'description' => trim((string) \Input::post('description', '')),
 		);
-		$errors = array();
+		$errors = $this->validate_project_form($form);
 
-		if (\Input::method() === 'POST')
+		if (empty($errors))
 		{
-			$form['name'] = trim((string) \Input::post('name', ''));
-			$form['description'] = trim((string) \Input::post('description', ''));
+			$now = time();
 
-			if ($form['name'] === '')
-			{
-				$errors['name'] = 'プロジェクト名を入力してください。';
-			}
-			elseif (mb_strlen($form['name']) > 100)
-			{
-				$errors['name'] = 'プロジェクト名は100文字以内で入力してください。';
-			}
+			\DB::insert('projects')->set(array(
+				'user_id' => $this->current_user['id'],
+				'name' => $form['name'],
+				'description' => $form['description'] !== '' ? $form['description'] : null,
+				'created_at' => $now,
+				'updated_at' => $now,
+			))->execute();
 
-			if (mb_strlen($form['description']) > 65535)
-			{
-				$errors['description'] = '説明が長すぎます。内容を短くしてください。';
-			}
-
-			if (empty($errors))
-			{
-				$now = time();
-
-				\DB::insert('projects')->set(array(
-					'user_id' => $this->current_user['id'],
-					'name' => $form['name'],
-					'description' => $form['description'] !== '' ? $form['description'] : null,
-					'created_at' => $now,
-					'updated_at' => $now,
-				))->execute();
-
-				\Response::redirect('projects');
-			}
+			\Response::redirect('projects');
 		}
 
-		$this->template->title = 'プロジェクト作成';
-		$this->template->content = \View::forge('projects/form', array(
+		$this->render_form(array(
 			'form_title' => 'プロジェクト作成',
 			'form_description' => '新しいプロジェクト名と説明を登録します。',
 			'form_action' => '/projects/create',
@@ -67,7 +61,29 @@ class Controller_Projects extends Controller_Base
 		));
 	}
 
-	public function action_edit($project_id)
+	public function get_edit($project_id)
+	{
+		$project = $this->find_project_for_current_user((int) $project_id);
+
+		if (empty($project))
+		{
+			throw new \HttpNotFoundException();
+		}
+
+		$this->render_form(array(
+			'form_title' => 'プロジェクト編集',
+			'form_description' => '登録済みのプロジェクト情報を更新します。',
+			'form_action' => '/projects/edit/'.$project['id'],
+			'submit_label' => '更新',
+			'form' => array(
+				'name' => $project['name'],
+				'description' => $project['description'],
+			),
+			'errors' => array(),
+		));
+	}
+
+	public function post_edit($project_id)
 	{
 		$project = $this->find_project_for_current_user((int) $project_id);
 
@@ -77,35 +93,27 @@ class Controller_Projects extends Controller_Base
 		}
 
 		$form = array(
-			'name' => $project['name'],
-			'description' => $project['description'],
+			'name' => trim((string) \Input::post('name', '')),
+			'description' => trim((string) \Input::post('description', '')),
 		);
-		$errors = array();
+		$errors = $this->validate_project_form($form);
 
-		if (\Input::method() === 'POST')
+		if (empty($errors))
 		{
-			$form['name'] = trim((string) \Input::post('name', ''));
-			$form['description'] = trim((string) \Input::post('description', ''));
-			$errors = $this->validate_project_form($form);
+			\DB::update('projects')
+				->set(array(
+					'name' => $form['name'],
+					'description' => $form['description'] !== '' ? $form['description'] : null,
+					'updated_at' => time(),
+				))
+				->where('id', '=', $project['id'])
+				->where('user_id', '=', $this->current_user['id'])
+				->execute();
 
-			if (empty($errors))
-			{
-				\DB::update('projects')
-					->set(array(
-						'name' => $form['name'],
-						'description' => $form['description'] !== '' ? $form['description'] : null,
-						'updated_at' => time(),
-					))
-					->where('id', '=', $project['id'])
-					->where('user_id', '=', $this->current_user['id'])
-					->execute();
-
-				\Response::redirect('projects');
-			}
+			\Response::redirect('projects');
 		}
 
-		$this->template->title = 'プロジェクト編集';
-		$this->template->content = \View::forge('projects/form', array(
+		$this->render_form(array(
 			'form_title' => 'プロジェクト編集',
 			'form_description' => '登録済みのプロジェクト情報を更新します。',
 			'form_action' => '/projects/edit/'.$project['id'],
@@ -115,13 +123,8 @@ class Controller_Projects extends Controller_Base
 		));
 	}
 
-	public function action_delete($project_id)
+	public function post_delete($project_id)
 	{
-		if (\Input::method() !== 'POST')
-		{
-			\Response::redirect('projects');
-		}
-
 		$project = $this->find_project_for_current_user((int) $project_id);
 
 		if (empty($project))
@@ -135,6 +138,12 @@ class Controller_Projects extends Controller_Base
 			->execute();
 
 		\Response::redirect('projects');
+	}
+
+	protected function render_form(array $view_data)
+	{
+		$this->template->title = $view_data['form_title'];
+		$this->template->content = \View::forge('projects/form', $view_data);
 	}
 
 	protected function validate_project_form(array $form)
@@ -169,10 +178,7 @@ class Controller_Projects extends Controller_Base
 
 		foreach ($projects as &$project)
 		{
-			if ($project['description'] === null)
-			{
-				$project['description'] = '';
-			}
+			$project = $this->format_project_for_display($project);
 		}
 		unset($project);
 
@@ -188,11 +194,26 @@ class Controller_Projects extends Controller_Base
 			->execute()
 			->current();
 
-		if ($project and $project['description'] === null)
+		if ( ! $project)
+		{
+			return array();
+		}
+
+		if ($project['description'] === null)
 		{
 			$project['description'] = '';
 		}
 
-		return $project ?: array();
+		return $project;
+	}
+
+	protected function format_project_for_display(array $project)
+	{
+		$description = $project['description'] === null ? '' : $project['description'];
+		$project['description'] = $description;
+		$project['description_display'] = $description !== '' ? $description : '説明は未登録です。';
+		$project['updated_at_display'] = $project['updated_at'] ? date('Y-m-d H:i', $project['updated_at']) : '-';
+
+		return $project;
 	}
 }

@@ -75,7 +75,7 @@
 
 	<div class="task-project-summary">
 		<h3><?php echo e($project['name']); ?></h3>
-		<p><?php echo $project['description'] !== '' ? nl2br(e($project['description'])) : 'プロジェクト説明は未登録です。'; ?></p>
+		<p><?php echo e($project['description_display']); ?></p>
 	</div>
 
 	<form class="task-form" method="post" action="<?php echo e($form_action); ?>">

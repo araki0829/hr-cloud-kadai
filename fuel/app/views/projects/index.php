@@ -82,7 +82,7 @@
 	<div>
 		<h2 class="projects-page-title">プロジェクト一覧</h2>
 		<p class="projects-page-description">
-			<?php echo e($current_user['name']); ?> さんのプロジェクトを表示しています。
+			<?php echo e($current_user_name); ?> さんのプロジェクトを表示しています。
 		</p>
 	</div>
 	<a class="project-create-link" href="/projects/create">新規作成</a>
@@ -97,12 +97,10 @@
 		<?php foreach ($projects as $project): ?>
 			<div class="project-card">
 				<h3 class="project-card-title"><?php echo e($project['name']); ?></h3>
-				<p class="project-card-description">
-					<?php echo $project['description'] !== null && $project['description'] !== '' ? nl2br(e($project['description'])) : '説明は未登録です。'; ?>
-				</p>
+				<p class="project-card-description"><?php echo e($project['description_display']); ?></p>
 				<p class="project-card-meta">
 					更新日時:
-					<?php echo $project['updated_at'] ? date('Y-m-d H:i', $project['updated_at']) : '-'; ?>
+					<?php echo e($project['updated_at_display']); ?>
 				</p>
 				<div class="project-card-actions">
 					<a class="action-tasks" href="/projects/<?php echo e($project['id']); ?>/tasks">タスクを見る</a>
