@@ -27,7 +27,7 @@ class Controller_Tasks extends Controller_Base
 		}
 		unset($task);
 
-		$status_list = \Config::get('task.status_list', array());
+		$status_list = $this->get_task_status_list();
 
 		$this->template->title = 'タスク一覧';
 		$this->template->content = \View::forge('tasks/index', array(
@@ -35,6 +35,93 @@ class Controller_Tasks extends Controller_Base
 			'tasks' => $tasks,
 			'status_list' => $status_list,
 		));
+	}
+
+	public function action_create($project_id)
+	{
+		$project = $this->find_project_for_current_user((int) $project_id);
+
+		if (empty($project))
+		{
+			throw new \HttpNotFoundException();
+		}
+
+		$form = array(
+			'title' => '',
+			'body' => '',
+			'status' => 0,
+		);
+		$errors = array();
+		$status_list = $this->get_task_status_list();
+
+		if (\Input::method() === 'POST')
+		{
+			$form['title'] = trim((string) \Input::post('title', ''));
+			$form['body'] = trim((string) \Input::post('body', ''));
+			$form['status'] = (int) \Input::post('status', 0);
+			$errors = $this->validate_task_form($form, $status_list);
+
+			if (empty($errors))
+			{
+				$now = time();
+
+				\DB::insert('tasks')->set(array(
+					'project_id' => $project['id'],
+					'title' => $form['title'],
+					'body' => $form['body'] !== '' ? $form['body'] : null,
+					'status' => $form['status'],
+					'created_at' => $now,
+					'updated_at' => $now,
+				))->execute();
+
+				\Response::redirect('projects/'.$project['id'].'/tasks');
+			}
+		}
+
+		$this->template->title = 'タスク作成';
+		$this->template->content = \View::forge('tasks/form', array(
+			'project' => $project,
+			'form_title' => 'タスク作成',
+			'form_description' => '新しいタスクを登録します。',
+			'form_action' => '/projects/'.$project['id'].'/tasks/create',
+			'submit_label' => '保存',
+			'form' => $form,
+			'errors' => $errors,
+			'status_list' => $status_list,
+		));
+	}
+
+	protected function validate_task_form(array $form, array $status_list)
+	{
+		$errors = array();
+
+		if ($form['title'] === '')
+		{
+			$errors['title'] = 'タスク名を入力してください。';
+		}
+		elseif (mb_strlen($form['title']) > 100)
+		{
+			$errors['title'] = 'タスク名は100文字以内で入力してください。';
+		}
+
+		if (mb_strlen($form['body']) > 65535)
+		{
+			$errors['body'] = '詳細が長すぎます。内容を短くしてください。';
+		}
+
+		if ( ! array_key_exists($form['status'], $status_list))
+		{
+			$errors['status'] = '状態の値が不正です。';
+		}
+
+		return $errors;
+	}
+
+	protected function get_task_status_list()
+	{
+		\Config::load('task', true);
+
+		return \Config::get('task.status_list', array());
 	}
 
 	protected function find_project_for_current_user($project_id)
