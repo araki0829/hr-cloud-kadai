@@ -1,65 +1,136 @@
-# インターン課題環境構築手順
+# タスク管理アプリ
 
-## Dockerの基本知識
-Dockerの基本的な概念については、以下のリンクを参考にしてください：
-- [Docker入門（1）](https://qiita.com/Sicut_study/items/4f301d000ecee98e78c9)
-- [Docker入門（2）](https://qiita.com/takusan64/items/4d622ce1858c426719c7)
+## 概要
+日々のタスクを管理するアプリです。  
+プロジェクトごとにタスクを管理できるようにしています。
 
-## セットアップ手順
+## 機能
+- ユーザ登録、ログイン、ログアウト
+- プロジェクト管理機能（作成／一覧表示／編集／削除）
+- タスク管理機能（作成／一覧表示／編集／削除）
+- タスク状態変更機能（未着手／進行中／完了）
 
-1. **リポジトリをクローン**
-   ```bash
-   git clone <リポジトリURL>
-   ```
+## 使用技術
+- PHP 7.3
+- FuelPHP 1.8
+- MySQL 8.0
+- Docker
+- Knockout.js
+- Bootstrap
+- Git / GitHub
 
-2. **dockerディレクトリに移動**
-   ```bash
-   cd docker
-   ```
+## 課題条件チェック
 
-3. **データベース名の設定**
-   `docker-compose.yml` 内の `db` サービスにある `MYSQL_DATABASE` の値を、各自任意のデータベース名に設定してください。
-   
-   例:
-   ```yaml
-   environment:
-     MYSQL_ROOT_PASSWORD: root
-     MYSQL_DATABASE: <your_database_name>  # 任意のデータベース名を指定
-   ```
+参照元:
+`documents_araki/課題条件.md`
 
-4. **Dockerイメージのビルド**
-   ```bash
-   docker-compose build
-   ```
+### 1. サーバサイド言語はPHPで、フレームワークのFuelPHPを使用すること
+- 実装箇所:
+  - `fuel/app/classes/controller/*`
+  - `fuel/app/views/*`
+  - `fuel/app/config/*`
+- 内容:
+  - FuelPHP の Controller / View / Config / Migration の構成で実装している
 
-5. **コンテナの起動**
-   ```bash
-   docker-compose up -d
-   ```
-6. **ブラウザからlocalhostにアクセス**
+### 2. beforeメソッドを使う
+- 実装箇所:
+  - `fuel/app/classes/controller/base.php`
+- 内容:
+  - `before()` でログイン中ユーザ取得と未ログイン時のリダイレクトをしている
 
-## PHP周りのバージョン
-- **PHP**: 7.3
-- **FuelPHP**: 1.8
+### 3. configファイルをカスタマイズする
+- 実装箇所:
+  - `fuel/app/config/config.php`
+  - `fuel/app/config/task.php`
+  - `fuel/app/config/development/db.php`
+- 内容:
+  - タイムゾーン、cookie、security、DB接続、タスク状態定義を設定している
 
-## ログについて
-- **アクセスログ**: Dockerのコンテナのログ
-- **FuelPHPのエラーログ**: /var/www/html/intern_kadai/fuel/app/logs/
-  - 年月日ごとにログが管理されている
-  - tail -f {見たいログファイル}でログを出力
+### 4. sessionやcookieを使う
+- 実装箇所:
+  - `fuel/app/classes/controller/auth.php`
+  - `fuel/app/classes/controller/base.php`
+  - `fuel/app/config/config.php`
+- 内容:
+  - `Session` でログイン状態を保持
+  - `Cookie` でログイン画面のメールアドレス再表示を実装
 
-## MySQLコンテナ設定
-このプロジェクトには、MySQLを使用するDBコンテナが含まれています。設定は以下の通りです。
+### 5. ネームスペースを使う
+- 実装箇所:
+  - `fuel/app/migrations/001_create_users.php`
+  - `fuel/app/migrations/002_create_projects.php`
+  - `fuel/app/migrations/003_create_tasks.php`
+  - `fuel/app/migrations/004_add_check_constraint_to_tasks_status.php`
+- 内容:
+  - migration で `namespace Fuel\\Migrations;` を使っている
 
-- **MySQLバージョン**: 8.0
-- **ポート**: `3306`
-- **環境変数**:
-  - `MYSQL_ROOT_PASSWORD`: root
-  - `MYSQL_DATABASE`: 各自設定したデータベース名
+### 6. \（バックスラッシュ）を使ったグローバルな名前空間へのアクセスについて理解している
+- 実装箇所:
+  - `fuel/app/classes/controller/auth.php`
+  - `fuel/app/classes/controller/projects.php`
+  - `fuel/app/classes/controller/tasks.php`
+  - `fuel/app/classes/controller/base.php`
+- 内容:
+  - `\Response`, `\Session`, `\Input`, `\Config`, `\DB` のようにグローバル名前空間アクセスを使っている
 
-### アクセス情報
-- **ホスト**: `localhost`
-- **ポート**: `3306`
-- **ユーザー名**: `root`
-- **パスワード**: `root`
-- **データベース名**: 各自設定した名前
+### 7. データベースとのやり取りはDBクラスを使うこと
+- 実装箇所:
+  - `fuel/app/classes/model/user.php`
+  - `fuel/app/classes/model/project.php`
+  - `fuel/app/classes/model/task.php`
+- 内容:
+  - `DB::select`, `DB::insert`, `DB::update`, `DB::delete` を使っている
+
+### 8. 1:n関係のテーブル構造があること
+- 実装箇所:
+  - `documents_araki/DB設計.md`
+  - `fuel/app/migrations/002_create_projects.php`
+  - `fuel/app/migrations/003_create_tasks.php`
+- 内容:
+  - `users 1 : n projects`
+  - `projects 1 : n tasks`
+
+### 9. CRUDの機能が網羅されている
+- 実装箇所:
+  - `fuel/app/classes/controller/projects.php`
+  - `fuel/app/classes/controller/tasks.php`
+- 内容:
+  - プロジェクトとタスクで作成・一覧・編集・削除を実装している
+
+### 10. フロントエンドのライブラリにknockout.jsが使用されている
+- 実装箇所:
+  - `fuel/app/views/tasks/index.php`
+- 内容:
+  - タスク一覧のステータス変更 UI で Knockout.js を使っている
+
+### 11. uxを考慮して一部動的なuiが実装されている（非同期処理）
+- 実装箇所:
+  - `fuel/app/views/tasks/index.php`
+  - `fuel/app/classes/controller/api/tasks.php`
+- 内容:
+  - タスク一覧画面で画面遷移なしのステータス更新を実装している
+
+### 12. GitHubでコードの管理を行う
+- 実装箇所:
+  - ローカルリポジトリ全体
+- 内容:
+  - Git で履歴管理している
+
+### 13. セキュリティ資料を読み必要な実装を行う
+- 実装箇所:
+  - `fuel/app/config/config.php`
+  - `fuel/app/views/template.php`
+  - `fuel/app/views/auth/login.php`
+  - `fuel/app/views/auth/signup.php`
+  - `fuel/app/views/projects/form.php`
+  - `fuel/app/views/projects/index.php`
+  - `fuel/app/views/tasks/form.php`
+  - `fuel/app/views/tasks/index.php`
+  - `fuel/app/classes/controller/api/tasks.php`
+  - `fuel/app/migrations/004_add_check_constraint_to_tasks_status.php`
+- 内容:
+  - XSS対策: 出力時エスケープ
+  - 認可チェック: 他人データを操作不可
+  - パスワードハッシュ化
+  - CSRF対策
+  - `tasks.status` の DB制約追加
