@@ -58,6 +58,7 @@ class Controller_Auth extends Controller_Base
       }
       else
       {
+        \Session::instance()->rotate();
         \Session::set('user', array(
           'id' => $user['id'],
           'name' => $user['name'],
@@ -175,6 +176,7 @@ class Controller_Auth extends Controller_Base
   public function post_logout()
   {
     \Session::delete('user');
+    \Session::instance()->rotate();
     \Response::redirect('login');
   }
 
