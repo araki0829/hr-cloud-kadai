@@ -24,7 +24,6 @@ class Controller_Base extends Controller_Template
 		// 認証必須画面で未ログインならログイン画面へ戻す
 		if ($this->requires_auth() and empty($this->current_user))
 		{
-			\Session::set_flash('error', 'ログインしてください。');
 			\Response::redirect('login');
 		}
 	}

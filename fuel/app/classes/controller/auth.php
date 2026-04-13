@@ -161,7 +161,6 @@ class Controller_Auth extends Controller_Base
 					'updated_at' => $now,
 				))->execute();
 
-				\Session::set_flash('success', 'ユーザ登録が完了しました。ログインしてください。');
 				\Response::redirect('login');
 			}
 
@@ -178,8 +177,6 @@ class Controller_Auth extends Controller_Base
 	public function action_logout()
 	{
 		\Session::delete('user');
-		\Session::set_flash('success', 'ログアウトしました。');
-
 		\Response::redirect('login');
 	}
 }
