@@ -1,0 +1,58 @@
+body {
+  background: #f7f8fc;
+}
+
+.app-header {
+  background: #111111;
+  color: #fff;
+  padding: 16px 0;
+  margin-bottom: 24px;
+}
+
+.app-header a {
+  color: #fff;
+  margin-right: 16px;
+}
+
+.app-header-nav {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.logout-form {
+  display: inline-block;
+  margin: 0;
+}
+
+.logout-button {
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  background: transparent;
+  color: #fff;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.logout-button:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.app-card {
+  background: #fff;
+  border: 1px solid #d9e0ea;
+  border-radius: 8px;
+  padding: 24px;
+  box-shadow: 0 4px 16px rgba(31, 58, 95, 0.08);
+}
+
+.flash-message {
+  margin-bottom: 16px;
+}
+
+.user-status {
+  margin: 0;
+  font-size: 14px;
+}
