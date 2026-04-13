@@ -34,6 +34,7 @@
 	.task-project-card p {
 		margin: 0;
 		color: #475467;
+		white-space: pre-line;
 	}
 	.task-table {
 		width: 100%;
@@ -52,6 +53,9 @@
 	}
 	.task-table th {
 		background: #f8fafc;
+	}
+	.task-body-text {
+		white-space: pre-line;
 	}
 	.task-status-select {
 		min-width: 120px;
@@ -115,7 +119,7 @@
 
 <div class="task-project-card">
 	<h3><?php echo e($project['name']); ?></h3>
-	<p><?php echo $project['description'] !== '' ? nl2br(e($project['description'])) : 'プロジェクト説明は未登録です。'; ?></p>
+	<p><?php echo e($project['description'] !== '' ? $project['description'] : 'プロジェクト説明は未登録です。'); ?></p>
 </div>
 
 <?php if (empty($tasks)): ?>
@@ -137,21 +141,37 @@
 			<?php foreach ($tasks as $task): ?>
 				<tr>
 					<td><?php echo e($task['title']); ?></td>
-					<td><?php echo $task['body'] !== '' ? nl2br(e($task['body'])) : '詳細は未登録です。'; ?></td>
-					<td>
+					<td class="task-body-text"><?php echo e($task['body'] !== '' ? $task['body'] : '詳細は未登録です。'); ?></td>
+					<td
+						class="task-status-cell"
+						data-task-id="<?php echo e($task['id']); ?>"
+						data-status="<?php echo e($task['status']); ?>"
+					>
 						<select
 							class="task-status-select"
-							name="status"
-							data-task-id="<?php echo e($task['id']); ?>"
-							data-current-status="<?php echo e($task['status']); ?>"
+							data-bind="
+								css: {
+									'is-saving': isSaving(),
+									'is-error': hasError()
+								},
+								value: status,
+								event: { change: changeStatus }
+							"
 						>
 							<?php foreach ($status_list as $status_value => $status_label): ?>
-								<option value="<?php echo e($status_value); ?>"<?php echo (string) $task['status'] === (string) $status_value ? ' selected' : ''; ?>>
+								<option value="<?php echo e($status_value); ?>">
 									<?php echo e($status_label); ?>
 								</option>
 							<?php endforeach; ?>
 						</select>
-						<div class="task-status-message" aria-live="polite"></div>
+						<div
+							class="task-status-message"
+							aria-live="polite"
+							data-bind="
+								text: message,
+								css: { 'is-error': hasError() }
+							"
+						></div>
 					</td>
 					<td><?php echo $task['updated_at'] ? date('Y-m-d H:i', $task['updated_at']) : '-'; ?></td>
 					<td>
@@ -168,26 +188,89 @@
 	</table>
 <?php endif; ?>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/knockout/3.5.1/knockout-min.js"></script>
 <script>
-document.addEventListener('DOMContentLoaded', function () {
-	var statusSelects = document.querySelectorAll('.task-status-select');
+(function () {
+	function createTaskStatusViewModel(taskId, initialStatus) {
+		return {
+			taskId: taskId,
+			status: ko.observable(String(initialStatus)),
+			previousStatus: String(initialStatus),
+			message: ko.observable(''),
+			isSaving: ko.observable(false),
+			hasError: ko.observable(false),
+			changeStatus: function () {
+				var nextStatus = this.status();
+				var previousStatus = this.previousStatus;
 
-	statusSelects.forEach(function (select) {
+				if (nextStatus === previousStatus || this.isSaving()) {
+					return true;
+				}
+
+				this.isSaving(true);
+				this.hasError(false);
+				this.message('更新中...');
+
+				fetch('/api/tasks/change_status', {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+						'X-Requested-With': 'XMLHttpRequest'
+					},
+					body: new URLSearchParams({
+						task_id: this.taskId,
+						status: nextStatus
+					}).toString()
+				})
+					.then(function (response) {
+						return response.json().then(function (data) {
+							return {
+								ok: response.ok,
+								data: data
+							};
+						});
+					})
+					.then(function (result) {
+						if (!result.ok || !result.data.success) {
+							throw new Error(result.data.message || 'ステータスの更新に失敗しました。');
+						}
+
+						this.previousStatus = String(result.data.status);
+						this.status(String(result.data.status));
+						this.message('更新しました。');
+					}.bind(this))
+					.catch(function (error) {
+						this.status(previousStatus);
+						this.hasError(true);
+						this.message(error.message);
+					}.bind(this))
+					.finally(function () {
+						this.isSaving(false);
+					}.bind(this));
+
+				return true;
+			}
+		};
+	}
+
+	function attachPlainFallback(cell) {
+		var select = cell.querySelector('.task-status-select');
+		var message = cell.querySelector('.task-status-message');
+		var previousStatus = String(cell.getAttribute('data-status'));
+
+		select.value = previousStatus;
 		select.addEventListener('change', function () {
-			var previousStatus = select.getAttribute('data-current-status');
 			var nextStatus = select.value;
-			var taskId = select.getAttribute('data-task-id');
-			var messageElement = select.parentElement.querySelector('.task-status-message');
 
-			if (previousStatus === nextStatus) {
+			if (nextStatus === previousStatus) {
 				return;
 			}
 
 			select.disabled = true;
 			select.classList.remove('is-error');
 			select.classList.add('is-saving');
-			messageElement.textContent = '更新中...';
-			messageElement.classList.remove('is-error');
+			message.textContent = '更新中...';
+			message.classList.remove('is-error');
 
 			fetch('/api/tasks/change_status', {
 				method: 'POST',
@@ -196,7 +279,7 @@ document.addEventListener('DOMContentLoaded', function () {
 					'X-Requested-With': 'XMLHttpRequest'
 				},
 				body: new URLSearchParams({
-					task_id: taskId,
+					task_id: cell.getAttribute('data-task-id'),
 					status: nextStatus
 				}).toString()
 			})
@@ -213,20 +296,37 @@ document.addEventListener('DOMContentLoaded', function () {
 						throw new Error(result.data.message || 'ステータスの更新に失敗しました。');
 					}
 
-					select.setAttribute('data-current-status', String(result.data.status));
-					messageElement.textContent = '更新しました。';
+					previousStatus = String(result.data.status);
+					select.value = previousStatus;
+					message.textContent = '更新しました。';
 				})
 				.catch(function (error) {
 					select.value = previousStatus;
 					select.classList.add('is-error');
-					messageElement.textContent = error.message;
-					messageElement.classList.add('is-error');
+					message.textContent = error.message;
+					message.classList.add('is-error');
 				})
 				.finally(function () {
 					select.disabled = false;
 					select.classList.remove('is-saving');
 				});
 		});
+	}
+
+	var statusCells = document.querySelectorAll('.task-status-cell');
+
+	if (typeof ko === 'undefined') {
+		statusCells.forEach(attachPlainFallback);
+		return;
+	}
+
+	statusCells.forEach(function (cell) {
+		var viewModel = createTaskStatusViewModel(
+			cell.getAttribute('data-task-id'),
+			cell.getAttribute('data-status')
+		);
+
+		ko.applyBindings(viewModel, cell);
 	});
-});
+})();
 </script>
