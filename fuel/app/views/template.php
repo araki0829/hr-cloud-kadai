@@ -18,6 +18,28 @@
 			color: #fff;
 			margin-right: 16px;
 		}
+		.app-header-nav {
+			display: flex;
+			justify-content: flex-end;
+			align-items: center;
+			flex-wrap: wrap;
+			gap: 12px;
+		}
+		.logout-form {
+			display: inline-block;
+			margin: 0;
+		}
+		.logout-button {
+			border: 1px solid rgba(255, 255, 255, 0.6);
+			background: transparent;
+			color: #fff;
+			padding: 6px 12px;
+			border-radius: 4px;
+			cursor: pointer;
+		}
+		.logout-button:hover {
+			background: rgba(255, 255, 255, 0.12);
+		}
 		.app-card {
 			background: #fff;
 			border: 1px solid #d9e0ea;
@@ -49,10 +71,15 @@
 					</p>
 				</div>
 				<div class="col-md-4 text-right">
-					<nav>
+					<nav class="app-header-nav">
 						<a href="/login">ログイン</a>
 						<a href="/signup">新規登録</a>
 						<a href="/projects">プロジェクト一覧</a>
+						<?php if ( ! empty($current_user)): ?>
+							<form class="logout-form" method="post" action="/logout">
+								<button class="logout-button" type="submit">ログアウト</button>
+							</form>
+						<?php endif; ?>
 					</nav>
 				</div>
 			</div>
