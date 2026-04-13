@@ -71,6 +71,8 @@
 		border-color: #dc2626;
 	}
 	.task-status-message {
+		display: block;
+		min-height: 20px;
 		margin-top: 6px;
 		font-size: 13px;
 		color: #475467;
