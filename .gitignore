@@ -1,0 +1,31 @@
+# OS / editor
+.DS_Store
+Thumbs.db
+desktop.ini
+.idea/
+.vscode/
+
+# Backup / temp files
+*~
+*.bak
+*.swp
+*.swo
+
+# Logs
+*.log
+fuel/app/logs/*/*/*
+
+# Runtime cache / temp
+fuel/app/cache/*/*
+fuel/app/tmp/
+
+# PHPUnit
+.phpunit.result.cache
+
+# Local env files
+.env
+.env.*
+!.env.example
+
+# Local documents
+documents_araki/
