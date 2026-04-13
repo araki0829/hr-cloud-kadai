@@ -12,13 +12,13 @@ class Controller_Base extends Controller_Template
 		parent::before();
 
 		// セッションからログイン中ユーザを取得する
-		$this->current_user = \Session::get('user');
+		$this->current_user = \Session::get('user', array());
 
 		// 全画面で使う共通データをテンプレートへ渡す
 		$this->template->title = 'HR Cloud';
 		$this->template->current_user = $this->current_user;
-		$this->template->flash_success = \Session::get_flash('success');
-		$this->template->flash_error = \Session::get_flash('error');
+		$this->template->flash_success = \Session::get_flash('success', '');
+		$this->template->flash_error = \Session::get_flash('error', '');
 		$this->template->content = '';
 
 		// 認証必須画面で未ログインならログイン画面へ戻す
