@@ -1,11 +1,12 @@
-version: "3.8"
+name: hrcloud
 
 services:
   app:
     build:
       context: ../
       dockerfile: docker/Dockerfile
-    container_name: fuelphp-app
+    container_name: hrcloud-app
+    restart: unless-stopped
     ports:
       - "80:80"
     volumes:
@@ -17,9 +18,11 @@ services:
     build:
       context: ../
       dockerfile: docker/db/Dockerfile
+    container_name: hrcloud-db
+    restart: unless-stopped
     environment:
       MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: fuelphp
+      MYSQL_DATABASE: intern_kadai_hrcloud
     ports:
       - "3306:3306"
     networks:
