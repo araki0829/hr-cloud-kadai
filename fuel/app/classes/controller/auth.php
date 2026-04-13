@@ -24,8 +24,97 @@ class Controller_Auth extends Controller_Base
 			\Response::redirect('projects');
 		}
 
+		$form = array(
+			'name' => '',
+			'email' => '',
+		);
+		$errors = array();
+
+		if (\Input::method() === 'POST')
+		{
+			$form['name'] = trim((string) \Input::post('name', ''));
+			$form['email'] = trim((string) \Input::post('email', ''));
+			$password = (string) \Input::post('password', '');
+			$password_confirmation = (string) \Input::post('password_confirmation', '');
+
+			if ($form['name'] === '')
+			{
+				$errors['name'] = 'ユーザ名を入力してください。';
+			}
+			elseif (mb_strlen($form['name']) > 100)
+			{
+				$errors['name'] = 'ユーザ名は100文字以内で入力してください。';
+			}
+
+			if ($form['email'] === '')
+			{
+				$errors['email'] = 'メールアドレスを入力してください。';
+			}
+			elseif ( ! filter_var($form['email'], FILTER_VALIDATE_EMAIL))
+			{
+				$errors['email'] = 'メールアドレスの形式が正しくありません。';
+			}
+			elseif (mb_strlen($form['email']) > 255)
+			{
+				$errors['email'] = 'メールアドレスは255文字以内で入力してください。';
+			}
+
+			if ($password === '')
+			{
+				$errors['password'] = 'パスワードを入力してください。';
+			}
+			elseif (strlen($password) < 8)
+			{
+				$errors['password'] = 'パスワードは8文字以上で入力してください。';
+			}
+
+			if ($password_confirmation === '')
+			{
+				$errors['password_confirmation'] = '確認用パスワードを入力してください。';
+			}
+			elseif ($password !== $password_confirmation)
+			{
+				$errors['password_confirmation'] = 'パスワードと確認用パスワードが一致しません。';
+			}
+
+			if (empty($errors))
+			{
+				$existing_user = \DB::select('id')
+					->from('users')
+					->where('email', '=', $form['email'])
+					->execute()
+					->as_array();
+
+				if ( ! empty($existing_user))
+				{
+					$errors['email'] = 'このメールアドレスはすでに登録されています。';
+				}
+			}
+
+			if (empty($errors))
+			{
+				$now = time();
+
+				\DB::insert('users')->set(array(
+					'name' => $form['name'],
+					'email' => $form['email'],
+					'password' => password_hash($password, PASSWORD_DEFAULT),
+					'created_at' => $now,
+					'updated_at' => $now,
+				))->execute();
+
+				\Session::set_flash('success', 'ユーザ登録が完了しました。ログインしてください。');
+				\Response::redirect('login');
+			}
+
+			\Session::set_flash('error', '入力内容を確認してください。');
+		}
+
 		$this->template->title = '新規登録 | HR Cloud';
-		$this->template->content = \View::forge('auth/signup');
+		$this->template->content = \View::forge('auth/signup', array(
+			'form' => $form,
+			'errors' => $errors,
+		));
 	}
 
 	public function action_logout()
