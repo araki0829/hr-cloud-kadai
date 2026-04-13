@@ -63,14 +63,7 @@
 		<div class="container">
 			<div class="row">
 				<div class="col-md-8">
-					<!-- <h1>HR Cloud</h1> -->
-					<p class="user-status">
-						<!-- <?php if ( ! empty($current_user)): ?>
-							ログイン中: <?php echo $current_user['name']; ?>
-						<?php else: ?>
-							未ログイン
-						<?php endif; ?> -->
-					</p>
+					<p class="user-status"></p>
 				</div>
 				<div class="col-md-4 text-right">
 					<nav class="app-header-nav">
