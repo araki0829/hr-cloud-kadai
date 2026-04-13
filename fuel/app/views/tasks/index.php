@@ -60,6 +60,20 @@
 		border-radius: 6px;
 		background: #fff;
 	}
+	.task-status-select.is-saving {
+		opacity: 0.6;
+	}
+	.task-status-select.is-error {
+		border-color: #dc2626;
+	}
+	.task-status-message {
+		margin-top: 6px;
+		font-size: 13px;
+		color: #475467;
+	}
+	.task-status-message.is-error {
+		color: #dc2626;
+	}
 	.task-actions {
 		display: flex;
 		flex-wrap: wrap;
@@ -129,6 +143,7 @@
 							class="task-status-select"
 							name="status"
 							data-task-id="<?php echo e($task['id']); ?>"
+							data-current-status="<?php echo e($task['status']); ?>"
 						>
 							<?php foreach ($status_list as $status_value => $status_label): ?>
 								<option value="<?php echo e($status_value); ?>"<?php echo (string) $task['status'] === (string) $status_value ? ' selected' : ''; ?>>
@@ -136,6 +151,7 @@
 								</option>
 							<?php endforeach; ?>
 						</select>
+						<div class="task-status-message" aria-live="polite"></div>
 					</td>
 					<td><?php echo $task['updated_at'] ? date('Y-m-d H:i', $task['updated_at']) : '-'; ?></td>
 					<td>
@@ -151,3 +167,66 @@
 		</tbody>
 	</table>
 <?php endif; ?>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+	var statusSelects = document.querySelectorAll('.task-status-select');
+
+	statusSelects.forEach(function (select) {
+		select.addEventListener('change', function () {
+			var previousStatus = select.getAttribute('data-current-status');
+			var nextStatus = select.value;
+			var taskId = select.getAttribute('data-task-id');
+			var messageElement = select.parentElement.querySelector('.task-status-message');
+
+			if (previousStatus === nextStatus) {
+				return;
+			}
+
+			select.disabled = true;
+			select.classList.remove('is-error');
+			select.classList.add('is-saving');
+			messageElement.textContent = '更新中...';
+			messageElement.classList.remove('is-error');
+
+			fetch('/api/tasks/change_status', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+					'X-Requested-With': 'XMLHttpRequest'
+				},
+				body: new URLSearchParams({
+					task_id: taskId,
+					status: nextStatus
+				}).toString()
+			})
+				.then(function (response) {
+					return response.json().then(function (data) {
+						return {
+							ok: response.ok,
+							data: data
+						};
+					});
+				})
+				.then(function (result) {
+					if (!result.ok || !result.data.success) {
+						throw new Error(result.data.message || 'ステータスの更新に失敗しました。');
+					}
+
+					select.setAttribute('data-current-status', String(result.data.status));
+					messageElement.textContent = '更新しました。';
+				})
+				.catch(function (error) {
+					select.value = previousStatus;
+					select.classList.add('is-error');
+					messageElement.textContent = error.message;
+					messageElement.classList.add('is-error');
+				})
+				.finally(function () {
+					select.disabled = false;
+					select.classList.remove('is-saving');
+				});
+		});
+	});
+});
+</script>
