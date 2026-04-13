@@ -40,13 +40,13 @@ class Controller_Projects extends Controller_Base
 		{
 			$now = time();
 
-			\DB::insert('projects')->set(array(
+			\Model_Project::create(array(
 				'user_id' => $this->current_user['id'],
 				'name' => $form['name'],
 				'description' => $form['description'] !== '' ? $form['description'] : null,
 				'created_at' => $now,
 				'updated_at' => $now,
-			))->execute();
+			));
 
 			\Response::redirect('projects');
 		}
@@ -100,15 +100,11 @@ class Controller_Projects extends Controller_Base
 
 		if (empty($errors))
 		{
-			\DB::update('projects')
-				->set(array(
-					'name' => $form['name'],
-					'description' => $form['description'] !== '' ? $form['description'] : null,
-					'updated_at' => time(),
-				))
-				->where('id', '=', $project['id'])
-				->where('user_id', '=', $this->current_user['id'])
-				->execute();
+			\Model_Project::update_by_id_and_user_id($project['id'], $this->current_user['id'], array(
+				'name' => $form['name'],
+				'description' => $form['description'] !== '' ? $form['description'] : null,
+				'updated_at' => time(),
+			));
 
 			\Response::redirect('projects');
 		}
@@ -132,10 +128,7 @@ class Controller_Projects extends Controller_Base
 			throw new \HttpNotFoundException();
 		}
 
-		\DB::delete('projects')
-			->where('id', '=', $project['id'])
-			->where('user_id', '=', $this->current_user['id'])
-			->execute();
+		\Model_Project::delete_by_id_and_user_id($project['id'], $this->current_user['id']);
 
 		\Response::redirect('projects');
 	}
@@ -169,12 +162,7 @@ class Controller_Projects extends Controller_Base
 
 	protected function fetch_projects_for_current_user()
 	{
-		$projects = \DB::select('id', 'name', 'description', 'created_at', 'updated_at')
-			->from('projects')
-			->where('user_id', '=', $this->current_user['id'])
-			->order_by('updated_at', 'desc')
-			->execute()
-			->as_array();
+		$projects = \Model_Project::find_all_by_user_id($this->current_user['id']);
 
 		foreach ($projects as &$project)
 		{
@@ -187,12 +175,7 @@ class Controller_Projects extends Controller_Base
 
 	protected function find_project_for_current_user($project_id)
 	{
-		$project = \DB::select('id', 'user_id', 'name', 'description', 'created_at', 'updated_at')
-			->from('projects')
-			->where('id', '=', $project_id)
-			->where('user_id', '=', $this->current_user['id'])
-			->execute()
-			->current();
+		$project = \Model_Project::find_by_id_and_user_id($project_id, $this->current_user['id']);
 
 		if ( ! $project)
 		{

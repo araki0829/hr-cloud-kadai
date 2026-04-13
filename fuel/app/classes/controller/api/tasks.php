@@ -28,7 +28,7 @@ class Controller_Api_Tasks extends Controller_Base
 			), 400);
 		}
 
-		$task = $this->find_task_for_current_user($task_id);
+		$task = \Model_Task::find_status_target_by_id_and_user_id($task_id, $this->current_user['id']);
 
 		if (empty($task))
 		{
@@ -39,14 +39,10 @@ class Controller_Api_Tasks extends Controller_Base
 			), 404);
 		}
 
-		\DB::update('tasks')
-			->set(array(
-				'status' => $status,
-				'updated_at' => time(),
-			))
-			->where('id', '=', $task['id'])
-			->where('project_id', '=', $task['project_id'])
-			->execute();
+		\Model_Task::update_by_id_and_project_id($task['id'], $task['project_id'], array(
+			'status' => $status,
+			'updated_at' => time(),
+		));
 
 		return $this->json_response(array(
 			'success' => true,
@@ -62,20 +58,6 @@ class Controller_Api_Tasks extends Controller_Base
 		\Config::load('task', true);
 
 		return \Config::get('task.status_list', array());
-	}
-
-	protected function find_task_for_current_user($task_id)
-	{
-		$task = \DB::select('tasks.id', 'tasks.project_id', 'tasks.status')
-			->from('tasks')
-			->join('projects', 'INNER')
-			->on('tasks.project_id', '=', 'projects.id')
-			->where('tasks.id', '=', $task_id)
-			->where('projects.user_id', '=', $this->current_user['id'])
-			->execute()
-			->current();
-
-		return $task ?: array();
 	}
 
 	protected function json_response(array $payload, $status = 200)

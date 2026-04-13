@@ -50,11 +50,7 @@ class Controller_Auth extends Controller_Base
 
 		if (empty($errors))
 		{
-			$user = \DB::select('id', 'name', 'email', 'password')
-				->from('users')
-				->where('email', '=', $form['email'])
-				->execute()
-				->current();
+			$user = \Model_User::find_by_email($form['email']);
 
 			if (empty($user) or ! password_verify($password, $user['password']))
 			{
@@ -151,13 +147,7 @@ class Controller_Auth extends Controller_Base
 
 		if (empty($errors))
 		{
-			$existing_user = \DB::select('id')
-				->from('users')
-				->where('email', '=', $form['email'])
-				->execute()
-				->as_array();
-
-			if ( ! empty($existing_user))
+			if (\Model_User::exists_by_email($form['email']))
 			{
 				$errors['email'] = 'このメールアドレスはすでに登録されています。';
 			}
@@ -167,13 +157,13 @@ class Controller_Auth extends Controller_Base
 		{
 			$now = time();
 
-			\DB::insert('users')->set(array(
+			\Model_User::create(array(
 				'name' => $form['name'],
 				'email' => $form['email'],
 				'password' => password_hash($password, PASSWORD_DEFAULT),
 				'created_at' => $now,
 				'updated_at' => $now,
-			))->execute();
+			));
 
 			\Response::redirect('login');
 		}

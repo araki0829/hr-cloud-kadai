@@ -11,12 +11,7 @@ class Controller_Tasks extends Controller_Base
 			throw new \HttpNotFoundException();
 		}
 
-		$tasks = \DB::select('id', 'project_id', 'title', 'body', 'status', 'created_at', 'updated_at')
-			->from('tasks')
-			->where('project_id', '=', $project['id'])
-			->order_by('updated_at', 'desc')
-			->execute()
-			->as_array();
+		$tasks = \Model_Task::find_all_by_project_id($project['id']);
 
 		foreach ($tasks as &$task)
 		{
@@ -81,14 +76,14 @@ class Controller_Tasks extends Controller_Base
 		{
 			$now = time();
 
-			\DB::insert('tasks')->set(array(
+			\Model_Task::create(array(
 				'project_id' => $project['id'],
 				'title' => $form['title'],
 				'body' => $form['body'] !== '' ? $form['body'] : null,
 				'status' => $form['status'],
 				'created_at' => $now,
 				'updated_at' => $now,
-			))->execute();
+			));
 
 			\Response::redirect('projects/'.$project['id'].'/tasks');
 		}
@@ -153,16 +148,12 @@ class Controller_Tasks extends Controller_Base
 
 		if (empty($errors))
 		{
-			\DB::update('tasks')
-				->set(array(
-					'title' => $form['title'],
-					'body' => $form['body'] !== '' ? $form['body'] : null,
-					'status' => $form['status'],
-					'updated_at' => time(),
-				))
-				->where('id', '=', $task['id'])
-				->where('project_id', '=', $task['project_id'])
-				->execute();
+			\Model_Task::update_by_id_and_project_id($task['id'], $task['project_id'], array(
+				'title' => $form['title'],
+				'body' => $form['body'] !== '' ? $form['body'] : null,
+				'status' => $form['status'],
+				'updated_at' => time(),
+			));
 
 			\Response::redirect('projects/'.$task['project_id'].'/tasks');
 		}
@@ -188,12 +179,7 @@ class Controller_Tasks extends Controller_Base
 			throw new \HttpNotFoundException();
 		}
 
-		\DB::query('DELETE FROM tasks WHERE id = :id AND project_id = :project_id')
-			->parameters(array(
-				'id' => $task['id'],
-				'project_id' => $task['project_id'],
-			))
-			->execute();
+		\Model_Task::delete_by_id_and_project_id($task['id'], $task['project_id']);
 
 		\Response::redirect('projects/'.$task['project_id'].'/tasks');
 	}
@@ -239,12 +225,7 @@ class Controller_Tasks extends Controller_Base
 
 	protected function find_project_for_current_user($project_id)
 	{
-		$project = \DB::select('id', 'user_id', 'name', 'description')
-			->from('projects')
-			->where('id', '=', $project_id)
-			->where('user_id', '=', $this->current_user['id'])
-			->execute()
-			->current();
+		$project = \Model_Project::find_by_id_and_user_id($project_id, $this->current_user['id']);
 
 		if ( ! $project)
 		{
@@ -261,14 +242,7 @@ class Controller_Tasks extends Controller_Base
 
 	protected function find_task_for_current_user($task_id)
 	{
-		$task = \DB::select('tasks.id', 'tasks.project_id', 'tasks.title', 'tasks.body', 'tasks.status', 'tasks.created_at', 'tasks.updated_at')
-			->from('tasks')
-			->join('projects', 'INNER')
-			->on('tasks.project_id', '=', 'projects.id')
-			->where('tasks.id', '=', $task_id)
-			->where('projects.user_id', '=', $this->current_user['id'])
-			->execute()
-			->current();
+		$task = \Model_Task::find_by_id_and_user_id($task_id, $this->current_user['id']);
 
 		if ( ! $task)
 		{
