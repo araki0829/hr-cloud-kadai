@@ -37,6 +37,7 @@
 	.task-form .form-control {
 		width: 100%;
 		padding: 10px 12px;
+		min-height: 44px;
 		border: 1px solid #cbd5e1;
 		border-radius: 6px;
 		box-sizing: border-box;
