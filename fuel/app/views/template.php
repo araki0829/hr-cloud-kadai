@@ -9,7 +9,7 @@
 			background: #f7f8fc;
 		}
 		.app-header {
-			background: #1f3a5f;
+			background: #111111;
 			color: #fff;
 			padding: 16px 0;
 			margin-bottom: 24px;
