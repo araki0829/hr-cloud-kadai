@@ -11,6 +11,9 @@ class Controller_Base extends Controller_Template
   {
     parent::before();
 
+    \Response::set_header('X-Frame-Options', 'DENY');
+    \Response::set_header('Content-Security-Policy', "frame-ancestors 'none'");
+
     // セッションからログイン中ユーザを取得する
     $this->current_user = \Session::get('user', array());
 
