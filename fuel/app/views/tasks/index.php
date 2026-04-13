@@ -53,24 +53,12 @@
 	.task-table th {
 		background: #f8fafc;
 	}
-	.task-status {
-		display: inline-block;
-		padding: 4px 10px;
-		border-radius: 999px;
-		font-size: 12px;
-		font-weight: bold;
-	}
-	.task-status-0 {
-		background: #e5e7eb;
-		color: #374151;
-	}
-	.task-status-1 {
-		background: #fde68a;
-		color: #92400e;
-	}
-	.task-status-2 {
-		background: #bbf7d0;
-		color: #166534;
+	.task-status-select {
+		min-width: 120px;
+		padding: 8px 10px;
+		border: 1px solid #cbd5e1;
+		border-radius: 6px;
+		background: #fff;
 	}
 	.task-actions {
 		display: flex;
@@ -137,9 +125,17 @@
 					<td><?php echo e($task['title']); ?></td>
 					<td><?php echo $task['body'] !== '' ? nl2br(e($task['body'])) : '詳細は未登録です。'; ?></td>
 					<td>
-						<span class="task-status task-status-<?php echo e($task['status']); ?>">
-							<?php echo e(isset($status_list[$task['status']]) ? $status_list[$task['status']] : '不明'); ?>
-						</span>
+						<select
+							class="task-status-select"
+							name="status"
+							data-task-id="<?php echo e($task['id']); ?>"
+						>
+							<?php foreach ($status_list as $status_value => $status_label): ?>
+								<option value="<?php echo e($status_value); ?>"<?php echo (string) $task['status'] === (string) $status_value ? ' selected' : ''; ?>>
+									<?php echo e($status_label); ?>
+								</option>
+							<?php endforeach; ?>
+						</select>
 					</td>
 					<td><?php echo $task['updated_at'] ? date('Y-m-d H:i', $task['updated_at']) : '-'; ?></td>
 					<td>
