@@ -11,6 +11,7 @@ class Controller_Api_Tasks extends Controller_Base
 			return $this->json_response(array(
 				'success' => false,
 				'message' => 'Method Not Allowed',
+				'csrf_token' => \Security::fetch_token(),
 			), 405);
 		}
 
@@ -23,6 +24,7 @@ class Controller_Api_Tasks extends Controller_Base
 			return $this->json_response(array(
 				'success' => false,
 				'message' => 'task_id is required.',
+				'csrf_token' => \Security::fetch_token(),
 			), 400);
 		}
 
@@ -31,6 +33,7 @@ class Controller_Api_Tasks extends Controller_Base
 			return $this->json_response(array(
 				'success' => false,
 				'message' => 'status is invalid.',
+				'csrf_token' => \Security::fetch_token(),
 			), 400);
 		}
 
@@ -41,6 +44,7 @@ class Controller_Api_Tasks extends Controller_Base
 			return $this->json_response(array(
 				'success' => false,
 				'message' => 'Task not found.',
+				'csrf_token' => \Security::fetch_token(),
 			), 404);
 		}
 
@@ -58,6 +62,7 @@ class Controller_Api_Tasks extends Controller_Base
 			'task_id' => $task['id'],
 			'status' => $status,
 			'status_label' => $status_list[$status],
+			'csrf_token' => \Security::fetch_token(),
 		));
 	}
 

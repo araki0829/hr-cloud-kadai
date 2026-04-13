@@ -3,6 +3,8 @@
 <head>
 	<meta charset="utf-8">
 	<title><?php echo $title; ?></title>
+	<meta name="csrf-token" content="<?php echo e(\Security::fetch_token()); ?>">
+	<meta name="csrf-token-key" content="<?php echo e(\Config::get('security.csrf_token_key')); ?>">
 	<link rel="stylesheet" href="/assets/css/bootstrap.css">
 	<style>
 		body {
@@ -75,6 +77,7 @@
 						<a href="/projects">プロジェクト一覧</a>
 						<?php if ( ! empty($current_user)): ?>
 							<form class="logout-form" method="post" action="/logout">
+								<?php echo \Form::csrf(); ?>
 								<button class="logout-button" type="submit">ログアウト</button>
 							</form>
 						<?php else: ?>
@@ -104,5 +107,9 @@
 			<?php echo $content; ?>
 		</div>
 	</main>
+	<script>
+		window.hrCloudCsrfToken = <?php echo json_encode(\Security::fetch_token(), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES); ?>;
+		window.hrCloudCsrfTokenKey = <?php echo json_encode(\Config::get('security.csrf_token_key'), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES); ?>;
+	</script>
 </body>
 </html>

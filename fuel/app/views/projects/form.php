@@ -59,6 +59,7 @@
 	<p class="project-form-description"><?php echo e($form_description); ?></p>
 
 	<form class="project-form" method="post" action="<?php echo e($form_action); ?>">
+		<?php echo \Form::csrf(); ?>
 		<div class="form-group">
 			<label for="name">プロジェクト名</label>
 			<input id="name" class="form-control" type="text" name="name" value="<?php echo e($form['name']); ?>" placeholder="プロジェクト名を入力">

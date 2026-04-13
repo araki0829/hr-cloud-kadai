@@ -79,6 +79,7 @@
 	</div>
 
 	<form class="task-form" method="post" action="<?php echo e($form_action); ?>">
+		<?php echo \Form::csrf(); ?>
 		<div class="form-group">
 			<label for="title">タスク名</label>
 			<input id="title" class="form-control" type="text" name="title" value="<?php echo e($form['title']); ?>" placeholder="タスク名を入力">

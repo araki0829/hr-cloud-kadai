@@ -108,6 +108,7 @@
 					<a class="action-tasks" href="/projects/<?php echo e($project['id']); ?>/tasks">タスクを見る</a>
 					<a class="action-edit" href="/projects/edit/<?php echo e($project['id']); ?>">編集</a>
 					<form method="post" action="/projects/delete/<?php echo e($project['id']); ?>" style="display:inline;">
+						<?php echo \Form::csrf(); ?>
 						<button class="action-delete" type="submit">削除</button>
 					</form>
 				</div>

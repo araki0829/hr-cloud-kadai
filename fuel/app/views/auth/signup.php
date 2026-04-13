@@ -45,6 +45,7 @@
 	<p class="auth-description">アカウントを作成して、プロジェクトとタスクの管理を始めます。</p>
 
 	<form class="auth-form" method="post" action="/signup">
+		<?php echo \Form::csrf(); ?>
 		<div class="form-group">
 			<label for="name">ユーザ名</label>
 			<input id="name" class="form-control" type="text" name="name" placeholder="ユーザ名を入力" value="<?php echo e($form['name']); ?>">

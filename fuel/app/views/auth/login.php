@@ -53,6 +53,7 @@
 	<p class="auth-description">登録済みのメールアドレスとパスワードでログインします。</p>
 
 	<form class="auth-form" method="post" action="/login">
+		<?php echo \Form::csrf(); ?>
 		<?php if ( ! empty($errors['auth'])): ?>
 			<div class="error-box"><?php echo e($errors['auth']); ?></div>
 		<?php endif; ?>

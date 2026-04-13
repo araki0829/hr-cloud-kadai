@@ -180,6 +180,7 @@
 						<div class="task-actions">
 							<a class="task-action-edit" href="/tasks/edit/<?php echo e($task['id']); ?>">編集</a>
 							<form method="post" action="/tasks/delete/<?php echo e($task['id']); ?>" style="display:inline;">
+								<?php echo \Form::csrf(); ?>
 								<button class="task-action-delete" type="submit">削除</button>
 							</form>
 						</div>
@@ -193,6 +194,30 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/knockout/3.5.1/knockout-min.js"></script>
 <script>
 (function () {
+	function buildCsrfParams() {
+		var params = {};
+		params[window.hrCloudCsrfTokenKey] = window.hrCloudCsrfToken;
+		return params;
+	}
+
+	function updateCsrfToken(nextToken) {
+		if (!nextToken) {
+			return;
+		}
+
+		window.hrCloudCsrfToken = nextToken;
+
+		var metaToken = document.querySelector('meta[name="csrf-token"]');
+		if (metaToken) {
+			metaToken.setAttribute('content', nextToken);
+		}
+
+		var hiddenInputs = document.querySelectorAll('input[name="' + window.hrCloudCsrfTokenKey + '"]');
+		hiddenInputs.forEach(function (input) {
+			input.value = nextToken;
+		});
+	}
+
 	function createTaskStatusViewModel(taskId, initialStatus) {
 		return {
 			taskId: taskId,
@@ -219,10 +244,10 @@
 						'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
 						'X-Requested-With': 'XMLHttpRequest'
 					},
-					body: new URLSearchParams({
+					body: new URLSearchParams(Object.assign(buildCsrfParams(), {
 						task_id: this.taskId,
 						status: nextStatus
-					}).toString()
+					})).toString()
 				})
 					.then(function (response) {
 						return response.json().then(function (data) {
@@ -237,6 +262,7 @@
 							throw new Error(result.data.message || 'ステータスの更新に失敗しました。');
 						}
 
+						updateCsrfToken(result.data.csrf_token);
 						this.previousStatus = String(result.data.status);
 						this.status(String(result.data.status));
 						this.message('更新しました。');
@@ -280,10 +306,10 @@
 					'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
 					'X-Requested-With': 'XMLHttpRequest'
 				},
-				body: new URLSearchParams({
+				body: new URLSearchParams(Object.assign(buildCsrfParams(), {
 					task_id: cell.getAttribute('data-task-id'),
 					status: nextStatus
-				}).toString()
+				})).toString()
 			})
 				.then(function (response) {
 					return response.json().then(function (data) {
@@ -298,6 +324,7 @@
 						throw new Error(result.data.message || 'ステータスの更新に失敗しました。');
 					}
 
+					updateCsrfToken(result.data.csrf_token);
 					previousStatus = String(result.data.status);
 					select.value = previousStatus;
 					message.textContent = '更新しました。';
