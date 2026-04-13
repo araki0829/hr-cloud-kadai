@@ -1,4 +1,4 @@
-<div class="auth-panel">
+<div class="w-420 mx-auto mt-24">
   <h2 class="auth-title">ログイン</h2>
   <p class="auth-description">登録済みのメールアドレスとパスワードでログインします。</p>
 
@@ -27,7 +27,7 @@
     <button class="btn btn-primary auth-submit" type="submit">ログイン</button>
   </form>
 
-  <p class="auth-link">
+  <p class="auth-link mt-20">
     <a href="/signup">新規登録はこちら</a>
   </p>
 </div>

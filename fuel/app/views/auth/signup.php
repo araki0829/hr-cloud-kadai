@@ -1,4 +1,4 @@
-<div class="auth-panel">
+<div class="w-420 mx-auto mt-24">
   <h2 class="auth-title">新規登録</h2>
   <p class="auth-description">アカウントを作成して、プロジェクトとタスクの管理を始めます。</p>
 
@@ -39,7 +39,7 @@
     <button class="btn btn-primary auth-submit" type="submit">新規登録</button>
   </form>
 
-  <p class="auth-link">
+  <p class="auth-link mt-20">
     <a href="/login">ログインページへ</a>
   </p>
 </div>

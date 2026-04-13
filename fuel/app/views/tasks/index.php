@@ -1,4 +1,4 @@
-<div class="tasks-page-header">
+<div class="flex justify-between items-start gap-16 mb-24">
   <div>
     <h2 class="tasks-page-title">タスク一覧</h2>
     <p class="tasks-page-description">プロジェクトごとにタスクを管理します。</p>
@@ -6,13 +6,13 @@
   <a class="task-create-link" href="/projects/<?php echo e($project['id']); ?>/tasks/create">新規作成</a>
 </div>
 
-<div class="task-project-card">
-  <h3><?php echo e($project['name']); ?></h3>
-  <p><?php echo e($project['description_display']); ?></p>
+<div class="panel-muted p-18-20 mb-20">
+  <h3 class="project-summary-title"><?php echo e($project['name']); ?></h3>
+  <p class="project-summary-description"><?php echo e($project['description_display']); ?></p>
 </div>
 
 <?php if (empty($tasks)): ?>
-  <div class="empty-tasks">
+  <div class="panel-empty">
     まだタスクがありません。まずは新規作成から始めてください。
   </div>
 <?php else: ?>
@@ -64,7 +64,7 @@
           </td>
           <td><?php echo e($task['updated_at_display']); ?></td>
           <td>
-            <div class="task-actions">
+            <div class="task-actions flex wrap gap-8">
               <a class="task-action-edit" href="/tasks/edit/<?php echo e($task['id']); ?>">編集</a>
               <form class="inline-form" method="post" action="/tasks/delete/<?php echo e($task['id']); ?>">
                 <?php echo \Form::csrf(); ?>

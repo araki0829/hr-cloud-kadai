@@ -1,10 +1,10 @@
-<div class="task-form-panel">
+<div class="w-680 mx-auto">
   <h2 class="task-form-title"><?php echo e($form_title); ?></h2>
   <p class="task-form-description"><?php echo e($form_description); ?></p>
 
-  <div class="task-project-summary">
-    <h3><?php echo e($project['name']); ?></h3>
-    <p><?php echo e($project['description_display']); ?></p>
+  <div class="panel-muted p-16-18 mb-20">
+    <h3 class="task-summary-title"><?php echo e($project['name']); ?></h3>
+    <p class="task-summary-description"><?php echo e($project['description_display']); ?></p>
   </div>
 
   <form class="task-form" method="post" action="<?php echo e($form_action); ?>">
@@ -39,7 +39,7 @@
       <?php endif; ?>
     </div>
 
-    <div class="task-form-actions">
+    <div class="flex items-center gap-12">
       <button class="task-submit-button" type="submit"><?php echo e($submit_label); ?></button>
       <a class="task-cancel-link" href="/projects/<?php echo e($project['id']); ?>/tasks">一覧へ戻る</a>
     </div>
