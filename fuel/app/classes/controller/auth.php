@@ -12,8 +12,66 @@ class Controller_Auth extends Controller_Base
 			\Response::redirect('projects');
 		}
 
+		$form = array(
+			'email' => '',
+		);
+		$errors = array();
+
+		if (\Input::method() === 'POST')
+		{
+			$form['email'] = trim((string) \Input::post('email', ''));
+			$password = (string) \Input::post('password', '');
+
+			if ($form['email'] === '')
+			{
+				$errors['email'] = 'メールアドレスを入力してください。';
+			}
+			elseif ( ! filter_var($form['email'], FILTER_VALIDATE_EMAIL))
+			{
+				$errors['email'] = 'メールアドレスの形式が正しくありません。';
+			}
+
+			if ($password === '')
+			{
+				$errors['password'] = 'パスワードを入力してください。';
+			}
+
+			if (empty($errors))
+			{
+				$user = \DB::select('id', 'name', 'email', 'password')
+					->from('users')
+					->where('email', '=', $form['email'])
+					->execute()
+					->current();
+
+				if (empty($user) or ! password_verify($password, $user['password']))
+				{
+					$errors['auth'] = 'メールアドレスまたはパスワードが正しくありません。';
+				}
+				else
+				{
+					\Session::set('user', array(
+						'id' => $user['id'],
+						'name' => $user['name'],
+						'email' => $user['email'],
+					));
+					\Session::set_flash('success', 'ログインしました。');
+
+					\Response::redirect('projects');
+				}
+			}
+
+			if ( ! empty($errors))
+			{
+				\Session::set_flash('error', 'ログインに失敗しました。');
+			}
+		}
+
 		$this->template->title = 'ログイン | HR Cloud';
-		$this->template->content = \View::forge('auth/login');
+		$this->template->content = \View::forge('auth/login', array(
+			'form' => $form,
+			'errors' => $errors,
+		));
 	}
 
 	public function action_signup()

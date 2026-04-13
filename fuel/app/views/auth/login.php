@@ -21,6 +21,19 @@
 	.auth-form .form-group {
 		margin-bottom: 16px;
 	}
+	.auth-form .error-text {
+		margin-top: 6px;
+		color: #c53030;
+		font-size: 13px;
+	}
+	.auth-form .error-box {
+		margin-bottom: 16px;
+		padding: 12px 14px;
+		border: 1px solid #f3b5b5;
+		border-radius: 6px;
+		background: #fff5f5;
+		color: #c53030;
+	}
 	.auth-form .form-control {
 		height: 44px;
 	}
@@ -40,14 +53,24 @@
 	<p class="auth-description">登録済みのメールアドレスとパスワードでログインします。</p>
 
 	<form class="auth-form" method="post" action="/login">
+		<?php if ( ! empty($errors['auth'])): ?>
+			<div class="error-box"><?php echo e($errors['auth']); ?></div>
+		<?php endif; ?>
+
 		<div class="form-group">
 			<label for="email">メールアドレス</label>
-			<input id="email" class="form-control" type="email" name="email" placeholder="example@example.com">
+			<input id="email" class="form-control" type="email" name="email" placeholder="example@example.com" value="<?php echo e($form['email']); ?>">
+			<?php if ( ! empty($errors['email'])): ?>
+				<p class="error-text"><?php echo e($errors['email']); ?></p>
+			<?php endif; ?>
 		</div>
 
 		<div class="form-group">
 			<label for="password">パスワード</label>
 			<input id="password" class="form-control" type="password" name="password" placeholder="パスワードを入力">
+			<?php if ( ! empty($errors['password'])): ?>
+				<p class="error-text"><?php echo e($errors['password']); ?></p>
+			<?php endif; ?>
 		</div>
 
 		<button class="btn btn-primary auth-submit" type="submit">ログイン</button>
