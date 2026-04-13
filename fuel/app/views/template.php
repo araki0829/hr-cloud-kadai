@@ -72,13 +72,14 @@
 				</div>
 				<div class="col-md-4 text-right">
 					<nav class="app-header-nav">
-						<a href="/login">ログイン</a>
-						<a href="/signup">新規登録</a>
 						<a href="/projects">プロジェクト一覧</a>
 						<?php if ( ! empty($current_user)): ?>
 							<form class="logout-form" method="post" action="/logout">
 								<button class="logout-button" type="submit">ログアウト</button>
 							</form>
+						<?php else: ?>
+							<a href="/login">ログイン</a>
+							<a href="/signup">新規登録</a>
 						<?php endif; ?>
 					</nav>
 				</div>
