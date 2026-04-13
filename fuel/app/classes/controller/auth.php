@@ -13,7 +13,7 @@ class Controller_Auth extends Controller_Base
 		}
 
 		$form = array(
-			'email' => '',
+			'email' => (string) \Cookie::get('remember_email', ''),
 		);
 		$errors = array();
 
@@ -21,6 +21,12 @@ class Controller_Auth extends Controller_Base
 		{
 			$form['email'] = trim((string) \Input::post('email', ''));
 			$password = (string) \Input::post('password', '');
+
+			if ($form['email'] !== '')
+			{
+				// 次回ログイン時にメールアドレスを再表示する
+				\Cookie::set('remember_email', $form['email']);
+			}
 
 			if ($form['email'] === '')
 			{
