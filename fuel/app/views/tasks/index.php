@@ -192,10 +192,10 @@
 <?php endif; ?>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/knockout/3.5.1/knockout-min.js"></script>
-<script>
+	<script>
 (function () {
 	function buildCsrfParams() {
-		var params = {};
+		const params = {};
 		params[window.hrCloudCsrfTokenKey] = window.hrCloudCsrfToken;
 		return params;
 	}
@@ -207,12 +207,12 @@
 
 		window.hrCloudCsrfToken = nextToken;
 
-		var metaToken = document.querySelector('meta[name="csrf-token"]');
+		const metaToken = document.querySelector('meta[name="csrf-token"]');
 		if (metaToken) {
 			metaToken.setAttribute('content', nextToken);
 		}
 
-		var hiddenInputs = document.querySelectorAll('input[name="' + window.hrCloudCsrfTokenKey + '"]');
+		const hiddenInputs = document.querySelectorAll('input[name="' + window.hrCloudCsrfTokenKey + '"]');
 		hiddenInputs.forEach(function (input) {
 			input.value = nextToken;
 		});
@@ -227,8 +227,8 @@
 			isSaving: ko.observable(false),
 			hasError: ko.observable(false),
 			changeStatus: function () {
-				var nextStatus = this.status();
-				var previousStatus = this.previousStatus;
+				const nextStatus = this.status();
+				const previousStatus = this.previousStatus;
 
 				if (nextStatus === previousStatus || this.isSaving()) {
 					return true;
@@ -282,13 +282,13 @@
 	}
 
 	function attachPlainFallback(cell) {
-		var select = cell.querySelector('.task-status-select');
-		var message = cell.querySelector('.task-status-message');
-		var previousStatus = String(cell.getAttribute('data-status'));
+		const select = cell.querySelector('.task-status-select');
+		const message = cell.querySelector('.task-status-message');
+		let previousStatus = String(cell.getAttribute('data-status'));
 
 		select.value = previousStatus;
 		select.addEventListener('change', function () {
-			var nextStatus = select.value;
+			const nextStatus = select.value;
 
 			if (nextStatus === previousStatus) {
 				return;
@@ -342,7 +342,7 @@
 		});
 	}
 
-	var statusCells = document.querySelectorAll('.task-status-cell');
+	const statusCells = document.querySelectorAll('.task-status-cell');
 
 	if (typeof ko === 'undefined') {
 		statusCells.forEach(attachPlainFallback);
@@ -350,7 +350,7 @@
 	}
 
 	statusCells.forEach(function (cell) {
-		var viewModel = createTaskStatusViewModel(
+		const viewModel = createTaskStatusViewModel(
 			cell.getAttribute('data-task-id'),
 			cell.getAttribute('data-status')
 		);
