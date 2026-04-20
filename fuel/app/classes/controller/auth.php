@@ -10,7 +10,7 @@ class Controller_Auth extends Controller_Base
     {
       \Response::redirect('projects');
     }
-
+    // ログイン画面で前回入力したメールアドレスを覚える
     $this->render_login(array(
       'email' => (string) \Cookie::get('remember_email', ''),
     ), array());
@@ -165,8 +165,8 @@ class Controller_Auth extends Controller_Base
 
     \Session::set_flash('error', '入力内容を確認してください。');
     $this->render_signup($form, $errors);
-  }
-
+    }
+// セッション固定攻撃対策
   public function post_logout()
   {
     \Auth::logout();
